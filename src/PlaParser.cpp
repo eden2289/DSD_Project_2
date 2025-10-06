@@ -49,8 +49,8 @@ bool PlaParser::parse(const std::string& filename){
             std::string output;
             ss >> output; // The second token is the output.
             if (!output.empty()) {
-                // We only care about the on-set, i.e., terms where the output is '1'.
-                if (output == "1") {
+                // Modified: Accept both "1" (on-set) and "-" (don't care)
+                if (output == "1" || output == "-") {
                     product_terms.push_back({first_token, output});
                 }
             }
@@ -73,4 +73,90 @@ const std::vector<std::string>& PlaParser::getInputNames() const {
 // Getter for the product terms.
 const std::vector<ProductTerm>& PlaParser::getProductTerms() const {
     return product_terms;
+}
+
+// ==================== NEW FUNCTIONS ====================
+
+// Helper function: Expand a cube with '-' into all possible binary strings
+// Example: expandCube("1-0") returns {"100", "110"}
+std::vector<std::string> PlaParser::expandCube(const std::string& cube) const {
+    std::vector<std::string> result;
+    
+    // Find the first '-' position
+    size_t pos = cube.find('-');
+    
+    if (pos == std::string::npos) {
+        // No '-' found, this is already a complete minterm
+        result.push_back(cube);
+    } else {
+        // Found a '-', replace it with '0' and '1' and recursively expand
+        std::string cube0 = cube;
+        std::string cube1 = cube;
+        
+        cube0[pos] = '0';  // Replace '-' with '0'
+        cube1[pos] = '1';  // Replace '-' with '1'
+        
+        // Recursively expand both branches
+        std::vector<std::string> expanded0 = expandCube(cube0);
+        std::vector<std::string> expanded1 = expandCube(cube1);
+        
+        // Merge results
+        result.insert(result.end(), expanded0.begin(), expanded0.end());
+        result.insert(result.end(), expanded1.begin(), expanded1.end());
+    }
+    
+    return result;
+}
+
+// Helper function: Convert binary string to decimal integer
+// Example: binaryToInt("1001") returns 9
+int PlaParser::binaryToInt(const std::string& binary) const {
+    int result = 0;
+    for (char c : binary) {
+        result = result * 2 + (c - '0');
+    }
+    return result;
+}
+
+// Get all on-set minterms (output = "1")
+// This function:
+// 1. Filters product terms with output = "1"
+// 2. Expands cubes with '-' into all possible minterms
+// 3. Converts binary strings to decimal integers
+std::vector<int> PlaParser::getMinterms() const {
+    std::vector<int> result;
+    
+    for (const auto& term : product_terms) {
+        if (term.output == "1") {
+            // Expand the cube (handles '-' wildcards)
+            std::vector<std::string> expanded = expandCube(term.cube);
+            
+            // Convert each binary string to integer
+            for (const auto& binary : expanded) {
+                result.push_back(binaryToInt(binary));
+            }
+        }
+    }
+    
+    return result;
+}
+
+// Get all don't care minterms (output = "-")
+// Similar to getMinterms(), but for don't care terms
+std::vector<int> PlaParser::getDontCares() const {
+    std::vector<int> result;
+    
+    for (const auto& term : product_terms) {
+        if (term.output == "-") {
+            // Expand the cube (handles '-' wildcards)
+            std::vector<std::string> expanded = expandCube(term.cube);
+            
+            // Convert each binary string to integer
+            for (const auto& binary : expanded) {
+                result.push_back(binaryToInt(binary));
+            }
+        }
+    }
+    
+    return result;
 }
