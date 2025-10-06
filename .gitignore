@@ -1,0 +1,15 @@
+# Compiled executable
+minimize
+
+# Object files
+*.o
+
+# Output files
+*.pla
+output.pla
+
+# VSCode specific
+.vscode/
+
+# Build artifacts
+build/
