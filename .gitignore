@@ -1,15 +1,22 @@
-# Compiled executable
+# Compiled executables
 minimize
+minimize_debug
 
 # Object files
 *.o
+src/*.o
 
-# Output files
-*.pla
-output.pla
+# Output directory
+output_pla/
+
+# Build artifacts
+build/
+dot/
+png/
 
 # VSCode specific
 .vscode/
 
-# Build artifacts
-build/
+# Don't ignore input test files in pla_files/
+# (only ignore output files)
+pla_files/output.pla

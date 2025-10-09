@@ -4,6 +4,9 @@
 #include <iostream>
 #include <string>
 #include "PlaParser.h"
+#include "QuineMcCluskey.h"
+#include "Petrick.h"
+#include "PlaWriter.h"
 
 int main(int argc, char* argv[]) {
     // Check command line arguments
@@ -55,21 +58,45 @@ int main(int argc, char* argv[]) {
     }
     std::cout << std::endl;
 
-    // Step 3: TODO - Implement Quine-McCluskey Algorithm
+    // Step 3: Run Quine-McCluskey Algorithm
     std::cout << "\n[Step 3] Quine-McCluskey Algorithm" << std::endl;
-    std::cout << "  → TODO: Find all Prime Implicants" << std::endl;
+    
+    QuineMcCluskey qm(parser.getNumInputs());
+    
+    // Print detailed steps
+    qm.printDetailedSteps(minterms, dont_cares);
+    
+    // Find prime implicants
+    qm.findPrimeImplicants(minterms, dont_cares);
+    
+    const auto& prime_implicants = qm.getPrimeImplicants();
+    std::cout << "\n  ✓ Found " << prime_implicants.size() << " Prime Implicants" << std::endl;
 
-    // Step 4: TODO - Implement Petrick's Algorithm
-    std::cout << "\n[Step 4] Petrick's Algorithm" << std::endl;
-    std::cout << "  → TODO: Find minimal SOP cover" << std::endl;
+    // Step 4: Run Petrick's Algorithm
+    PetrickSolver petrick;
+    petrick.solve(prime_implicants, minterms, dont_cares);
+    petrick.printSolution();
 
-    // Step 5: TODO - Write output PLA
-    std::cout << "\n[Step 5] Write Output" << std::endl;
-    std::cout << "  → TODO: Write minimized PLA to " << output_pla << std::endl;
+    // Step 5: Write output PLA
+    std::cout << "\n[Step 5] Write Output PLA" << std::endl;
+    
+    PlaWriter writer(parser.getNumInputs(), 
+                     parser.getInputNames(), 
+                     "F");
+    
+    writer.setMinimalCover(petrick.getMinimalCover());
+    
+    if (writer.write(output_pla)) {
+        std::cout << "  ✓ Successfully wrote to " << output_pla << std::endl;
+        std::cout << "  ✓ Product terms: " << writer.getNumProductTerms() << std::endl;
+        std::cout << "  ✓ Total literals: " << writer.getTotalLiterals() << std::endl;
+    } else {
+        std::cerr << "  ✗ Failed to write output file" << std::endl;
+        return 1;
+    }
 
     std::cout << "\n====================================" << std::endl;
-    std::cout << "  PlaParser implementation complete!" << std::endl;
-    std::cout << "  Next: Implement QM + Petrick" << std::endl;
+    std::cout << "  Minimization Complete!" << std::endl;
     std::cout << "====================================" << std::endl;
 
     return 0;
